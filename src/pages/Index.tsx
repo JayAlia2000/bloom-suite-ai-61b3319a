@@ -19,16 +19,19 @@ export default function Index() {
       icon: Sparkles,
       title: "Product Description Generator",
       description: "Generate high-converting product descriptions for wigs, lashes, and beauty products.",
+      path: "/product-description",
     },
     {
       icon: Calculator,
       title: "Beauty Price Calculator",
       description: "Enter your costs and instantly see your perfect retail price, profit margin, and break-even point.",
+      path: "/price-calculator",
     },
     {
       icon: Calendar,
       title: "30-Day Content Planner",
       description: "Get a full month of Instagram & TikTok ideas tailored to your beauty niche.",
+      path: "/content-planner",
     },
   ];
 
@@ -114,23 +117,28 @@ export default function Index() {
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {tools.map((tool, index) => (
-              <div
+              <button
                 key={tool.title}
-                className="group animate-fade-in-up"
+                onClick={() => navigate(tool.path)}
+                className="group animate-fade-in-up text-left"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="h-full p-8 rounded-2xl gradient-card border border-primary/10 shadow-soft transition-all duration-300 hover:shadow-glow hover:scale-[1.02]">
-                  <div className="h-14 w-14 gradient-hero rounded-xl flex items-center justify-center mb-6 shadow-soft group-hover:shadow-glow transition-all duration-300">
+                <div className="h-full p-8 rounded-2xl gradient-card border border-primary/10 shadow-soft transition-all duration-300 hover:shadow-glow hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] cursor-pointer">
+                  <div className="h-14 w-14 gradient-hero rounded-xl flex items-center justify-center mb-6 shadow-soft group-hover:shadow-glow transition-all duration-300 group-hover:scale-110">
                     <tool.icon className="h-7 w-7 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xl font-display font-semibold mb-3 text-foreground">
+                  <h3 className="text-xl font-display font-semibold mb-3 text-foreground group-hover:text-primary transition-colors">
                     {tool.title}
                   </h3>
                   <p className="text-muted-foreground font-body">
                     {tool.description}
                   </p>
+                  <div className="mt-4 flex items-center text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-sm">Get Started</span>
+                    <ArrowRight className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </section>

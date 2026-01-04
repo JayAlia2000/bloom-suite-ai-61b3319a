@@ -26,21 +26,21 @@ export default function Dashboard() {
       icon: Sparkles,
       title: "Product Description Generator",
       description: "Create compelling descriptions for your beauty products that captivate and convert customers.",
-      path: "/tools/product-description",
+      path: "/product-description",
       color: "from-pink-500 to-rose-400",
     },
     {
       icon: Calculator,
       title: "Beauty Price Calculator",
       description: "Calculate optimal pricing with profit margins, break-even analysis, and competitor insights.",
-      path: "/tools/price-calculator",
+      path: "/price-calculator",
       color: "from-rose-400 to-orange-300",
     },
     {
       icon: Calendar,
       title: "Social Media Content Planner",
       description: "Generate 30-day content calendars tailored specifically for beauty brands.",
-      path: "/tools/content-planner",
+      path: "/content-planner",
       color: "from-orange-300 to-amber-300",
     },
   ];
@@ -109,15 +109,15 @@ export default function Dashboard() {
               Welcome to Bloom Suite AI — let's grow your beauty brand today.
             </h1>
             <div className="flex flex-wrap gap-3 mt-6">
-              <Button variant="hero" onClick={() => navigate("/tools/product-description")}>
+              <Button variant="hero" onClick={() => navigate("/product-description")}>
                 <Sparkles className="h-4 w-4 mr-2" />
                 Create Product Description
               </Button>
-              <Button variant="secondary" onClick={() => navigate("/tools/price-calculator")}>
+              <Button variant="secondary" onClick={() => navigate("/price-calculator")}>
                 <Calculator className="h-4 w-4 mr-2" />
                 Calculate Pricing
               </Button>
-              <Button variant="secondary" onClick={() => navigate("/tools/content-planner")}>
+              <Button variant="secondary" onClick={() => navigate("/content-planner")}>
                 <Calendar className="h-4 w-4 mr-2" />
                 Generate 30-Day Content Plan
               </Button>
