@@ -105,12 +105,23 @@ export default function Dashboard() {
       <main className="relative z-10 container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
           <div className="mb-12 animate-fade-in-up">
-            <h1 className="text-4xl font-display font-semibold text-foreground mb-3">
-              Welcome to Your Dashboard
+            <h1 className="text-3xl md:text-4xl font-display font-semibold text-foreground mb-3">
+              Welcome to Bloom Suite AI — let's grow your beauty brand today.
             </h1>
-            <p className="text-lg text-muted-foreground font-body">
-              Choose a tool below to get started with your beauty business.
-            </p>
+            <div className="flex flex-wrap gap-3 mt-6">
+              <Button variant="hero" onClick={() => navigate("/tools/product-description")}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Create Product Description
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/tools/price-calculator")}>
+                <Calculator className="h-4 w-4 mr-2" />
+                Calculate Pricing
+              </Button>
+              <Button variant="secondary" onClick={() => navigate("/tools/content-planner")}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Generate 30-Day Content Plan
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
