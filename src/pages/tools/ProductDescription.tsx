@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, Sparkles, ArrowLeft, Copy, Save, Loader2 } from "lucide-react";
+import { Flower2, Sparkles, ArrowLeft, Copy, Loader2 } from "lucide-react";
 
 export default function ProductDescription() {
   const { user, loading } = useAuth();
@@ -23,7 +23,6 @@ export default function ProductDescription() {
   
   const [generatedDescription, setGeneratedDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -59,10 +58,33 @@ export default function ProductDescription() {
         throw new Error(response.error.message);
       }
 
-      setGeneratedDescription(response.data.description);
+      const description = response.data.description;
+      setGeneratedDescription(description);
+      
+      // Auto-save to history if user is logged in
+      if (user) {
+        try {
+          await supabase.from("tool_history").insert([{
+            user_id: user.id,
+            tool_type: "product_description" as const,
+            title: productName,
+            input_data: {
+              productName,
+              productType,
+              keyIngredients,
+              targetAudience,
+              tone,
+            } as any,
+            output_data: { description } as any,
+          }]);
+        } catch (saveError) {
+          console.error("Auto-save failed:", saveError);
+        }
+      }
+      
       toast({
         title: "Description generated!",
-        description: "Your product description is ready.",
+        description: user ? "Saved to your history automatically." : "Your product description is ready.",
       });
     } catch (error: any) {
       toast({
@@ -81,42 +103,6 @@ export default function ProductDescription() {
       title: "Copied!",
       description: "Description copied to clipboard.",
     });
-  };
-
-  const handleSave = async () => {
-    if (!generatedDescription || !user) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from("tool_history").insert([{
-        user_id: user.id,
-        tool_type: "product_description" as const,
-        title: productName,
-        input_data: {
-          productName,
-          productType,
-          keyIngredients,
-          targetAudience,
-          tone,
-        } as any,
-        output_data: { description: generatedDescription } as any,
-      }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Saved!",
-        description: "Description saved to your history.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Save failed",
-        description: error.message,
-      });
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   if (loading) {
@@ -272,24 +258,10 @@ export default function ProductDescription() {
                         {generatedDescription}
                       </p>
                     </div>
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={handleCopy}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                      </Button>
-                      <Button
-                        variant="default"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Save className="h-4 w-4 mr-2" />
-                        )}
-                        Save to History
-                      </Button>
-                    </div>
+                    <Button variant="default" onClick={handleCopy} className="w-full sm:w-auto">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy to Clipboard
+                    </Button>
                   </>
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-[200px] text-muted-foreground">

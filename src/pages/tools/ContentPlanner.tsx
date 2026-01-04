@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, Calendar, ArrowLeft, Save, Loader2, Download, Instagram } from "lucide-react";
+import { Flower2, Calendar, ArrowLeft, Loader2, Download, Copy } from "lucide-react";
 
 interface ContentDay {
   day: number;
@@ -40,7 +40,6 @@ export default function ContentPlanner() {
 
   const [calendar, setCalendar] = useState<ContentDay[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -73,10 +72,33 @@ export default function ContentPlanner() {
         throw new Error(response.error.message);
       }
 
-      setCalendar(response.data.calendar);
+      const generatedCalendar = response.data.calendar;
+      setCalendar(generatedCalendar);
+      
+      // Auto-save to history if user is logged in
+      if (user) {
+        const nicheLabel = niches.find(n => n.value === niche)?.label || niche;
+        const toneLabel = tones.find(t => t.value === tone)?.label || tone;
+        
+        try {
+          await supabase.from("tool_history").insert([{
+            user_id: user.id,
+            tool_type: "content_planner" as const,
+            title: `${nicheLabel} - ${toneLabel} 30-Day Plan`,
+            input_data: {
+              niche,
+              tone,
+            } as any,
+            output_data: { calendar: generatedCalendar } as any,
+          }]);
+        } catch (saveError) {
+          console.error("Auto-save failed:", saveError);
+        }
+      }
+      
       toast({
         title: "Calendar generated!",
-        description: "Your 30-day content calendar is ready.",
+        description: user ? "Saved to your history automatically." : "Your 30-day content calendar is ready.",
       });
     } catch (error: any) {
       console.error("Generation error:", error);
@@ -90,40 +112,25 @@ export default function ContentPlanner() {
     }
   };
 
-  const handleSave = async () => {
-    if (!calendar.length || !user) return;
+  const handleCopyAll = () => {
+    const text = calendar.map(day => 
+      `Day ${day.day} (${day.platform}):\n${day.postIdea}\n\nCaption:\n${day.caption}`
+    ).join("\n\n---\n\n");
+    
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Full calendar copied to clipboard.",
+    });
+  };
 
-    const nicheLabel = niches.find(n => n.value === niche)?.label || niche;
-    const toneLabel = tones.find(t => t.value === tone)?.label || tone;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from("tool_history").insert([{
-        user_id: user.id,
-        tool_type: "content_planner" as const,
-        title: `${nicheLabel} - ${toneLabel} 30-Day Plan`,
-        input_data: {
-          niche,
-          tone,
-        } as any,
-        output_data: { calendar } as any,
-      }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Saved!",
-        description: "Content calendar saved to your history.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Save failed",
-        description: error.message,
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleCopyDay = (day: ContentDay) => {
+    const text = `Day ${day.day} (${day.platform}):\n${day.postIdea}\n\nCaption:\n${day.caption}`;
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: `Day ${day.day} copied to clipboard.`,
+    });
   };
 
   const handleDownload = () => {
@@ -291,17 +298,9 @@ export default function ContentPlanner() {
                     <Download className="h-4 w-4 mr-2" />
                     Export CSV
                   </Button>
-                  <Button
-                    variant="default"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Save to History
+                  <Button variant="default" onClick={handleCopyAll}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy All
                   </Button>
                 </div>
               </div>
@@ -311,9 +310,16 @@ export default function ContentPlanner() {
                   <Card
                     key={day.day}
                     variant="soft"
-                    className="p-4 animate-fade-in-up"
+                    className="p-4 animate-fade-in-up group relative"
                     style={{ animationDelay: `${index * 0.02}s` }}
                   >
+                    <button
+                      onClick={() => handleCopyDay(day)}
+                      className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
+                      title="Copy this day"
+                    >
+                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
                         Day {day.day}
