@@ -11,31 +11,62 @@ serve(async (req) => {
   }
 
   try {
-    const { brandName, brandNiche, targetAudience, contentGoals, startDate } = await req.json();
+    const { niche, tone } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const prompt = `Create a 30-day social media content calendar for a beauty brand with these details:
-- Brand Name: ${brandName}
-- Niche: ${brandNiche}
-${targetAudience ? `- Target Audience: ${targetAudience}` : ''}
-${contentGoals ? `- Content Goals: ${contentGoals}` : ''}
-- Start Date: ${startDate}
+    console.log("Generating content calendar for:", { niche, tone });
 
-Return a JSON array with exactly 30 objects, each containing:
-- day: number (1-30)
-- date: string (formatted as "Mon, Jan 1")
-- theme: string (content theme for the day)
-- caption: string (engaging caption, 2-3 sentences)
-- hashtags: string (5-7 relevant hashtags)
-- postType: string (one of: "Photo", "Reel", "Carousel", "Story", "Live")
+    const nicheDescriptions: Record<string, string> = {
+      hair: "wigs, hair extensions, natural hair care, protective styles",
+      lashes: "mink lashes, magnetic lashes, lash strips, lash care",
+      nails: "press-on nails, acrylic sets, nail art, nail care",
+      makeup: "foundations, lip products, eyeshadow, makeup tutorials",
+    };
 
-Include a mix of content types: product showcases, behind-the-scenes, tutorials, user testimonials, educational content, and engagement posts.
+    const toneDescriptions: Record<string, string> = {
+      luxury: "elegant, sophisticated, high-end, exclusive",
+      fun: "playful, energetic, relatable, emoji-friendly",
+      professional: "educational, expert, informative, trustworthy",
+      bold: "edgy, statement-making, confident, unapologetic",
+    };
 
-Return ONLY the JSON array, no other text.`;
+    const nicheDesc = nicheDescriptions[niche] || niche;
+    const toneDesc = toneDescriptions[tone] || tone;
+
+    const prompt = `Create a 30-day social media content calendar for a beauty brand specializing in ${nicheDesc}.
+
+The brand tone is ${toneDesc}.
+
+Generate exactly 30 days of content with a good mix of Instagram and TikTok posts.
+
+For each day, provide:
+1. A specific post idea (be creative and specific, not generic)
+2. A ready-to-use caption (2-3 sentences, matching the ${tone} tone, include a call-to-action)
+3. The platform (alternate between "Instagram" and "TikTok" throughout the month)
+
+Content types to include across the 30 days:
+- Product showcases and new arrivals
+- Tutorials and how-to content
+- Behind-the-scenes of the business
+- Customer testimonials and reviews
+- Tips and educational content
+- Trending sounds/challenges (for TikTok)
+- Carousel posts with tips (for Instagram)
+- Engagement posts (polls, questions)
+- Promotional content and sales
+- User-generated content reposts
+
+Return ONLY a valid JSON array with exactly 30 objects, each with these exact keys:
+- "day": number (1-30)
+- "postIdea": string (the content idea)
+- "caption": string (ready-to-post caption)
+- "platform": string ("Instagram" or "TikTok")
+
+No markdown, no explanation, just the JSON array.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -46,32 +77,59 @@ Return ONLY the JSON array, no other text.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a social media marketing expert specializing in beauty brands. Return only valid JSON." },
+          { 
+            role: "system", 
+            content: "You are a social media marketing expert for beauty brands. You create engaging, platform-specific content calendars. Always return valid JSON only, no markdown formatting." 
+          },
           { role: "user", content: prompt }
         ],
       }),
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error("AI gateway error:", error);
+      const errorText = await response.text();
+      console.error("AI gateway error:", response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "AI credits depleted. Please add credits to continue." }), {
+          status: 402,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error("Failed to generate calendar");
     }
 
     const data = await response.json();
     let content = data.choices[0].message.content;
     
+    console.log("Raw AI response length:", content.length);
+    
     // Clean up the response to extract JSON
     content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
+    // Try to find JSON array in the response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
+    
     const calendar = JSON.parse(content);
+    
+    console.log("Successfully parsed calendar with", calendar.length, "days");
 
     return new Response(JSON.stringify({ calendar }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: any) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message || "Unknown error" }), {
+    console.error("Error generating calendar:", error);
+    return new Response(JSON.stringify({ error: error.message || "Failed to generate calendar" }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
