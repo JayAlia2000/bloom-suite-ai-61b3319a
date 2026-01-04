@@ -14,21 +14,21 @@ export default function Index() {
     }
   }, [user, loading, navigate]);
 
-  const features = [
+  const tools = [
     {
       icon: Sparkles,
-      title: "Product Descriptions",
-      description: "AI-powered descriptions that captivate and convert",
+      title: "Product Description Generator",
+      description: "Generate high-converting product descriptions for wigs, lashes, and beauty products.",
     },
     {
       icon: Calculator,
-      title: "Price Calculator",
-      description: "Smart pricing with profit margins and break-even analysis",
+      title: "Beauty Price Calculator",
+      description: "Enter your costs and instantly see your perfect retail price, profit margin, and break-even point.",
     },
     {
       icon: Calendar,
-      title: "Content Planner",
-      description: "30-day social media calendars tailored for beauty brands",
+      title: "30-Day Content Planner",
+      description: "Get a full month of Instagram & TikTok ideas tailored to your beauty niche.",
     },
   ];
 
@@ -102,24 +102,32 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Our Tools Section */}
         <section className="container mx-auto px-4 pb-32">
+          <div className="text-center mb-12 animate-fade-in-up">
+            <h2 className="text-3xl md:text-4xl font-display font-semibold text-foreground mb-4">
+              Our Tools
+            </h2>
+            <p className="text-muted-foreground font-body max-w-xl mx-auto">
+              Everything you need to grow your beauty brand, powered by AI.
+            </p>
+          </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {features.map((feature, index) => (
+            {tools.map((tool, index) => (
               <div
-                key={feature.title}
+                key={tool.title}
                 className="group animate-fade-in-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="h-full p-8 rounded-2xl gradient-card border border-primary/10 shadow-soft transition-all duration-300 hover:shadow-glow hover:scale-[1.02]">
                   <div className="h-14 w-14 gradient-hero rounded-xl flex items-center justify-center mb-6 shadow-soft group-hover:shadow-glow transition-all duration-300">
-                    <feature.icon className="h-7 w-7 text-primary-foreground" />
+                    <tool.icon className="h-7 w-7 text-primary-foreground" />
                   </div>
                   <h3 className="text-xl font-display font-semibold mb-3 text-foreground">
-                    {feature.title}
+                    {tool.title}
                   </h3>
                   <p className="text-muted-foreground font-body">
-                    {feature.description}
+                    {tool.description}
                   </p>
                 </div>
               </div>
