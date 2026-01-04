@@ -7,9 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, ArrowLeft } from "lucide-react";
+import { Flower2, ArrowLeft, Mail, RefreshCw } from "lucide-react";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
-type AuthMode = "login" | "signup" | "forgot-password";
+type AuthMode = "login" | "signup" | "forgot-password" | "verify-email";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -19,7 +24,10 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,6 +39,14 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const getErrorMessage = (error: any): string => {
     const message = error?.message?.toLowerCase() || "";
     
@@ -39,22 +55,89 @@ export default function Auth() {
       return "Invalid email or password. Please check your credentials and try again.";
     }
     if (message.includes("email not confirmed")) {
-      return "Please check your email and confirm your account before signing in.";
+      return "Please verify your email before signing in.";
     }
     if (message.includes("user not found")) {
       return "No account found with this email. Please sign up first.";
     }
-    if (message.includes("already registered")) {
+    if (message.includes("already registered") || message.includes("user already registered")) {
       return "This email is already registered. Please sign in instead.";
     }
     if (message.includes("password")) {
       return "Password must be at least 6 characters long.";
     }
-    if (message.includes("rate limit")) {
+    if (message.includes("rate limit") || message.includes("too many requests")) {
       return "Too many attempts. Please wait a moment and try again.";
+    }
+    if (message.includes("token has expired") || message.includes("otp expired")) {
+      return "Verification code has expired. Please request a new one.";
+    }
+    if (message.includes("invalid") && message.includes("otp")) {
+      return "Invalid verification code. Please check and try again.";
+    }
+    if (message.includes("email link is invalid or has expired")) {
+      return "Verification link has expired. Please request a new one.";
     }
     
     return error?.message || "An unexpected error occurred. Please try again.";
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCooldown > 0 || !email) return;
+    
+    setResendLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: email,
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to resend",
+          description: getErrorMessage(error),
+        });
+      } else {
+        toast({
+          title: "Verification email sent!",
+          description: "Please check your inbox for the new code.",
+        });
+        setResendCooldown(60); // 60 second cooldown
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: email,
+        token: otp,
+        type: "signup",
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Verification failed",
+          description: getErrorMessage(error),
+        });
+        setOtp("");
+      } else if (data.user) {
+        toast({
+          title: "Email verified — welcome to Bloom Suite AI!",
+          description: "Your account is now active.",
+        });
+        navigate("/dashboard");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,11 +148,29 @@ export default function Auth() {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) {
-          toast({
-            variant: "destructive",
-            title: "Sign in failed",
-            description: getErrorMessage(error),
-          });
+          const errorMessage = error.message?.toLowerCase() || "";
+          
+          // Check if email is not confirmed
+          if (errorMessage.includes("email not confirmed")) {
+            toast({
+              variant: "destructive",
+              title: "Email not verified",
+              description: "Please verify your email to continue. We'll send you a new verification code.",
+            });
+            // Resend verification email and switch to verify mode
+            await supabase.auth.resend({
+              type: "signup",
+              email: email,
+            });
+            setMode("verify-email");
+            setResendCooldown(60);
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Sign in failed",
+              description: getErrorMessage(error),
+            });
+          }
         } else {
           toast({
             title: "Welcome back!",
@@ -87,10 +188,11 @@ export default function Auth() {
           });
         } else {
           toast({
-            title: "Welcome to Bloom Suite AI!",
-            description: "Your account has been created successfully.",
+            title: "Check your email!",
+            description: "We've sent you a verification code.",
           });
-          navigate("/dashboard");
+          setMode("verify-email");
+          setResendCooldown(60);
         }
       } else if (mode === "forgot-password") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -123,6 +225,8 @@ export default function Auth() {
         return "Join Bloom Suite AI";
       case "forgot-password":
         return "Reset Password";
+      case "verify-email":
+        return "Verify Your Email";
     }
   };
 
@@ -134,6 +238,8 @@ export default function Auth() {
         return "Create your account to get started";
       case "forgot-password":
         return "Enter your email to receive a reset link";
+      case "verify-email":
+        return `Enter the 6-digit code sent to ${email}`;
     }
   };
 
@@ -146,8 +252,122 @@ export default function Auth() {
         return "Create Account";
       case "forgot-password":
         return "Send Reset Link";
+      case "verify-email":
+        return "Verify Email";
     }
   };
+
+  // Verify Email Screen
+  if (mode === "verify-email") {
+    return (
+      <div className="min-h-screen gradient-soft flex items-center justify-center p-4">
+        {/* Decorative elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+        </div>
+
+        <div className="w-full max-w-md relative">
+          <div className="text-center mb-8 animate-fade-in-up">
+            <Link to="/" className="inline-flex items-center gap-2 mb-4">
+              <div className="h-12 w-12 gradient-hero rounded-xl flex items-center justify-center shadow-glow">
+                <Flower2 className="h-7 w-7 text-primary-foreground" />
+              </div>
+            </Link>
+            <h1 className="text-3xl font-display font-semibold text-foreground">
+              {getTitle()}
+            </h1>
+            <p className="text-muted-foreground mt-2 font-body">
+              {getDescription()}
+            </p>
+          </div>
+
+          <Card variant="elevated" className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            <CardHeader className="space-y-1 text-center">
+              <div className="mx-auto mb-2 h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-xl">Check Your Inbox</CardTitle>
+              <CardDescription>
+                We sent a 6-digit verification code to <br />
+                <span className="font-medium text-foreground">{email}</span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex justify-center">
+                <InputOTP
+                  maxLength={6}
+                  value={otp}
+                  onChange={(value) => setOtp(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full"
+                onClick={handleVerifyOtp}
+                disabled={loading || otp.length !== 6}
+              >
+                {loading ? "Verifying..." : "Verify Email"}
+              </Button>
+
+              <div className="text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Didn't receive the code?
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  disabled={resendLoading || resendCooldown > 0}
+                  className="text-primary hover:text-primary/80"
+                >
+                  {resendLoading ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  {resendCooldown > 0 
+                    ? `Resend in ${resendCooldown}s` 
+                    : "Resend Code"}
+                </Button>
+              </div>
+
+              <div className="text-center pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setOtp("");
+                    setEmail("");
+                    setPassword("");
+                  }}
+                  className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors font-body"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to sign in
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <p className="text-center text-xs text-muted-foreground mt-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            Check your spam folder if you don't see the email.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-soft flex items-center justify-center p-4">
