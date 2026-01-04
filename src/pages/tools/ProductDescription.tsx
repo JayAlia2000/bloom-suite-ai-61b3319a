@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -17,8 +18,11 @@ export default function ProductDescription() {
   
   const [productName, setProductName] = useState("");
   const [productType, setProductType] = useState("");
-  const [keyIngredients, setKeyIngredients] = useState("");
+  const [keyFeatures, setKeyFeatures] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [shippingTime, setShippingTime] = useState("");
+  const [careInstructions, setCareInstructions] = useState("");
   const [tone, setTone] = useState("");
   
   const [generatedDescription, setGeneratedDescription] = useState("");
@@ -48,8 +52,11 @@ export default function ProductDescription() {
         body: {
           productName,
           productType,
-          keyIngredients,
+          keyFeatures,
           targetAudience,
+          benefits,
+          shippingTime,
+          careInstructions,
           tone,
         },
       });
@@ -71,8 +78,11 @@ export default function ProductDescription() {
             input_data: {
               productName,
               productType,
-              keyIngredients,
+              keyFeatures,
               targetAudience,
+              benefits,
+              shippingTime,
+              careInstructions,
               tone,
             } as any,
             output_data: { description } as any,
@@ -191,32 +201,74 @@ export default function ProductDescription() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="keyIngredients">Key Ingredients</Label>
+                  <Label htmlFor="keyFeatures">Key Features</Label>
                   <Input
-                    id="keyIngredients"
-                    placeholder="e.g., Hyaluronic acid, Vitamin C, Rose extract"
-                    value={keyIngredients}
-                    onChange={(e) => setKeyIngredients(e.target.value)}
+                    id="keyFeatures"
+                    placeholder="e.g., 22 inch length, body wave texture, HD lace, glueless"
+                    value={keyFeatures}
+                    onChange={(e) => setKeyFeatures(e.target.value)}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    For wigs/lashes: length, texture, lace type, style. For skincare: ingredients
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="benefits">Benefits</Label>
+                  <Input
+                    id="benefits"
+                    placeholder="e.g., Natural looking, lightweight, reusable, beginner-friendly"
+                    value={benefits}
+                    onChange={(e) => setBenefits(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">Comma-separated list of product benefits</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="targetAudience">Target Audience</Label>
                   <Input
                     id="targetAudience"
-                    placeholder="e.g., Women 25-45, sensitive skin"
+                    placeholder="e.g., First-time wig wearers, busy professionals"
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="shippingTime">Shipping Time</Label>
+                    <Input
+                      id="shippingTime"
+                      placeholder="e.g., 3-5 business days"
+                      value={shippingTime}
+                      onChange={(e) => setShippingTime(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tone">Tone</Label>
+                    <Select value={tone} onValueChange={setTone}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="luxury">Luxury</SelectItem>
+                        <SelectItem value="cute">Cute & Fun</SelectItem>
+                        <SelectItem value="bold">Bold & Edgy</SelectItem>
+                        <SelectItem value="professional">Professional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="tone">Tone & Style</Label>
-                  <Input
-                    id="tone"
-                    placeholder="e.g., Luxurious, playful, clinical"
-                    value={tone}
-                    onChange={(e) => setTone(e.target.value)}
+                  <Label htmlFor="careInstructions">Care Instructions</Label>
+                  <Textarea
+                    id="careInstructions"
+                    placeholder="e.g., Wash with sulfate-free shampoo, air dry, store on mannequin head"
+                    value={careInstructions}
+                    onChange={(e) => setCareInstructions(e.target.value)}
+                    rows={2}
                   />
                 </div>
 
