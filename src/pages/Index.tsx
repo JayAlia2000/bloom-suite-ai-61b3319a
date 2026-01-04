@@ -72,15 +72,17 @@ export default function Index() {
               <span className="text-sm font-medium text-foreground">AI-Powered Beauty Tools</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-semibold leading-tight mb-6">
-              Elevate Your{" "}
-              <span className="text-gradient">Beauty Brand</span>{" "}
-              with AI
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-semibold leading-tight mb-4">
+              <span className="text-gradient">Bloom Suite AI</span>
             </h1>
             
+            <p className="text-2xl md:text-3xl font-display font-medium text-foreground mb-6">
+              Where beauty brands grow.
+            </p>
+            
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-body">
-              Create compelling product descriptions, calculate perfect pricing, 
-              and plan your social media content — all powered by intelligent AI.
+              The all-in-one AI workspace for beauty entrepreneurs to create product descriptions, 
+              calculate perfect pricing, and plan 30 days of content in seconds.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -90,11 +92,11 @@ export default function Index() {
                 onClick={() => navigate("/auth")}
                 className="group"
               >
-                Start Free Today
+                Start Free Trial
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button variant="glass" size="xl" onClick={() => navigate("/auth")}>
-                View Demo
+              <Button variant="glass" size="xl" onClick={() => navigate("/dashboard")}>
+                View Tools
               </Button>
             </div>
           </div>
