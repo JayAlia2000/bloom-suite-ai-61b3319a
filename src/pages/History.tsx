@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, History, ArrowLeft, Sparkles, Calculator, Calendar, Trash2, Eye, LogOut, User } from "lucide-react";
+import { Flower2, History, ArrowLeft, Sparkles, Calculator, Calendar, Trash2, Copy, LogOut, User } from "lucide-react";
 import { format } from "date-fns";
 import { Json } from "@/integrations/supabase/types";
 
@@ -77,6 +77,32 @@ export default function HistoryPage() {
         description: error.message,
       });
     }
+  };
+
+  const handleCopyOutput = (item: HistoryItem) => {
+    let text = "";
+    
+    if (item.tool_type === "product_description") {
+      text = (item.output_data as any).description || "";
+    } else if (item.tool_type === "price_calculator") {
+      const data = item.output_data as any;
+      text = `Product: ${item.title}
+Suggested Retail Price: $${data.suggestedRetailPrice?.toFixed(2) || data.suggestedPrice}
+Total Cost: $${data.totalCost}
+Profit Per Unit: $${data.profitPerUnit}
+Break-even: ${data.breakEvenQuantity || data.breakEvenUnits} units/month`;
+    } else if (item.tool_type === "content_planner") {
+      const calendar = (item.output_data as any).calendar || [];
+      text = calendar.map((day: any) => 
+        `Day ${day.day} (${day.platform}):\n${day.postIdea || day.theme}\n\nCaption:\n${day.caption}`
+      ).join("\n\n---\n\n");
+    }
+    
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Output copied to clipboard.",
+    });
   };
 
   const handleSignOut = async () => {
@@ -318,7 +344,7 @@ export default function HistoryPage() {
                             <div className="space-y-2">
                               <p>
                                 <span className="font-medium">Suggested Price:</span> $
-                                {(selectedItem.output_data as any).suggestedPrice}
+                                {(selectedItem.output_data as any).suggestedRetailPrice?.toFixed(2) || (selectedItem.output_data as any).suggestedPrice}
                               </p>
                               <p>
                                 <span className="font-medium">Total Cost:</span> $
@@ -328,14 +354,10 @@ export default function HistoryPage() {
                                 <span className="font-medium">Profit per Unit:</span> $
                                 {(selectedItem.output_data as any).profitPerUnit}
                               </p>
-                              <p>
-                                <span className="font-medium">Margin:</span>{" "}
-                                {(selectedItem.output_data as any).marginPercentage}%
-                              </p>
-                              {(selectedItem.output_data as any).breakEvenUnits > 0 && (
+                              {((selectedItem.output_data as any).breakEvenQuantity > 0 || (selectedItem.output_data as any).breakEvenUnits > 0) && (
                                 <p>
                                   <span className="font-medium">Break-even:</span>{" "}
-                                  {(selectedItem.output_data as any).breakEvenUnits} units/month
+                                  {(selectedItem.output_data as any).breakEvenQuantity || (selectedItem.output_data as any).breakEvenUnits} units/month
                                 </p>
                               )}
                             </div>
@@ -350,10 +372,10 @@ export default function HistoryPage() {
                                   >
                                     <div className="flex justify-between mb-1">
                                       <span className="font-medium">
-                                        Day {day.day}: {day.theme}
+                                        Day {day.day}: {day.postIdea || day.theme}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
-                                        {day.postType}
+                                        {day.platform || day.postType}
                                       </span>
                                     </div>
                                     <p className="text-sm text-muted-foreground line-clamp-2">
@@ -372,12 +394,21 @@ export default function HistoryPage() {
                           )}
                         </div>
                       </div>
+                      {/* Copy Button */}
+                      <Button 
+                        variant="default" 
+                        className="w-full"
+                        onClick={() => handleCopyOutput(selectedItem)}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy to Clipboard
+                      </Button>
                     </CardContent>
                   </Card>
                 ) : (
                   <Card variant="soft" className="p-12">
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
-                      <Eye className="h-12 w-12 mb-4 opacity-30" />
+                      <History className="h-12 w-12 mb-4 opacity-30" />
                       <p className="text-lg font-medium">Select an item to view</p>
                       <p className="text-sm">
                         Click on any item from the list to see details

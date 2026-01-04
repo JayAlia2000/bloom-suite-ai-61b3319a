@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, Calculator, ArrowLeft, Save, Loader2, TrendingUp, DollarSign, Target } from "lucide-react";
+import { Flower2, Calculator, ArrowLeft, Copy, Loader2, TrendingUp, DollarSign, Target } from "lucide-react";
 
 export default function PriceCalculator() {
   const { user, loading } = useAuth();
@@ -34,7 +34,7 @@ export default function PriceCalculator() {
     }
   }, [user, loading, navigate]);
 
-  const handleCalculate = () => {
+  const handleCalculate = async () => {
     const product = parseFloat(productCost) || 0;
     const shipping = parseFloat(shippingCost) || 0;
     const packaging = parseFloat(packagingCost) || 0;
@@ -47,60 +47,56 @@ export default function PriceCalculator() {
     const monthlyFixedCosts = 500;
     const breakEvenQuantity = profitPerUnit > 0 ? Math.ceil(monthlyFixedCosts / profitPerUnit) : 0;
 
-    setResults({
+    const calculationResults = {
       suggestedRetailPrice: Math.round(suggestedRetailPrice * 100) / 100,
       profitPerUnit: Math.round(profitPerUnit * 100) / 100,
       breakEvenQuantity,
       totalCost: Math.round(totalCost * 100) / 100,
-    });
+    };
+
+    setResults(calculationResults);
+
+    // Auto-save to history if user is logged in
+    if (user && productName) {
+      try {
+        await supabase.from("tool_history").insert([{
+          user_id: user.id,
+          tool_type: "price_calculator" as const,
+          title: productName,
+          input_data: {
+            productName,
+            productCost,
+            shippingCost,
+            packagingCost,
+            desiredProfit,
+          } as any,
+          output_data: calculationResults as any,
+        }]);
+      } catch (saveError) {
+        console.error("Auto-save failed:", saveError);
+      }
+    }
 
     toast({
       title: "Calculation complete!",
-      description: "Your pricing analysis is ready.",
+      description: user && productName ? "Saved to your history automatically." : "Your pricing analysis is ready.",
     });
   };
 
-  const handleSave = async () => {
-    if (!results || !user || !productName) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Please enter a product name and calculate first.",
-      });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from("tool_history").insert([{
-        user_id: user.id,
-        tool_type: "price_calculator" as const,
-        title: productName,
-        input_data: {
-          productName,
-          productCost,
-          shippingCost,
-          packagingCost,
-          desiredProfit,
-        } as any,
-        output_data: results as any,
-      }]);
-
-      if (error) throw error;
-
-      toast({
-        title: "Saved!",
-        description: "Pricing calculation saved to your history.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Save failed",
-        description: error.message,
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  const handleCopy = () => {
+    if (!results) return;
+    const text = `Product: ${productName}
+Suggested Retail Price: $${results.suggestedRetailPrice.toFixed(2)}
+Total Cost: $${results.totalCost.toFixed(2)}
+Profit Per Unit: $${results.profitPerUnit.toFixed(2)}
+Profit Margin: ${desiredProfit}%
+Break-even: ${results.breakEvenQuantity} units/month`;
+    
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Pricing details copied to clipboard.",
+    });
   };
 
   if (loading) {
@@ -307,15 +303,10 @@ export default function PriceCalculator() {
                     variant="default"
                     size="lg"
                     className="w-full"
-                    onClick={handleSave}
-                    disabled={isSaving || !productName}
+                    onClick={handleCopy}
                   >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Save to History
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy to Clipboard
                   </Button>
                 </>
               ) : (
