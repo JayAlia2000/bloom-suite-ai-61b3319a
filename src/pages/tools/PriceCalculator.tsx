@@ -30,7 +30,7 @@ export default function PriceCalculator() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth");
+      navigate("/auth?mode=signup");
     }
   }, [user, loading, navigate]);
 
