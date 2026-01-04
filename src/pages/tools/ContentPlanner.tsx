@@ -2,32 +2,41 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, Calendar, ArrowLeft, Save, Loader2, Download } from "lucide-react";
+import { Flower2, Calendar, ArrowLeft, Save, Loader2, Download, Instagram } from "lucide-react";
 
 interface ContentDay {
   day: number;
-  date: string;
-  theme: string;
+  postIdea: string;
   caption: string;
-  hashtags: string;
-  postType: string;
+  platform: "Instagram" | "TikTok";
 }
+
+const niches = [
+  { value: "hair", label: "Hair (Wigs, Extensions, Natural Hair)" },
+  { value: "lashes", label: "Lashes (Mink, Magnetic, Strips)" },
+  { value: "nails", label: "Nails (Press-ons, Acrylics, Nail Art)" },
+  { value: "makeup", label: "Makeup (Foundations, Lips, Eyes)" },
+];
+
+const tones = [
+  { value: "luxury", label: "Luxury (Elegant, High-End)" },
+  { value: "fun", label: "Fun (Playful, Energetic)" },
+  { value: "professional", label: "Professional (Educational, Expert)" },
+  { value: "bold", label: "Bold (Edgy, Statement-Making)" },
+];
 
 export default function ContentPlanner() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [brandName, setBrandName] = useState("");
-  const [brandNiche, setBrandNiche] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
-  const [contentGoals, setContentGoals] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [niche, setNiche] = useState("");
+  const [tone, setTone] = useState("");
 
   const [calendar, setCalendar] = useState<ContentDay[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,11 +49,11 @@ export default function ContentPlanner() {
   }, [user, loading, navigate]);
 
   const handleGenerate = async () => {
-    if (!brandName || !brandNiche) {
+    if (!niche || !tone) {
       toast({
         variant: "destructive",
         title: "Missing information",
-        description: "Please enter at least your brand name and niche.",
+        description: "Please select both your beauty niche and brand tone.",
       });
       return;
     }
@@ -55,11 +64,8 @@ export default function ContentPlanner() {
     try {
       const response = await supabase.functions.invoke("generate-content-calendar", {
         body: {
-          brandName,
-          brandNiche,
-          targetAudience,
-          contentGoals,
-          startDate: startDate || new Date().toISOString().split("T")[0],
+          niche,
+          tone,
         },
       });
 
@@ -73,6 +79,7 @@ export default function ContentPlanner() {
         description: "Your 30-day content calendar is ready.",
       });
     } catch (error: any) {
+      console.error("Generation error:", error);
       toast({
         variant: "destructive",
         title: "Generation failed",
@@ -86,18 +93,18 @@ export default function ContentPlanner() {
   const handleSave = async () => {
     if (!calendar.length || !user) return;
 
+    const nicheLabel = niches.find(n => n.value === niche)?.label || niche;
+    const toneLabel = tones.find(t => t.value === tone)?.label || tone;
+
     setIsSaving(true);
     try {
       const { error } = await supabase.from("tool_history").insert([{
         user_id: user.id,
         tool_type: "content_planner" as const,
-        title: `${brandName} - 30 Day Plan`,
+        title: `${nicheLabel} - ${toneLabel} 30-Day Plan`,
         input_data: {
-          brandName,
-          brandNiche,
-          targetAudience,
-          contentGoals,
-          startDate,
+          niche,
+          tone,
         } as any,
         output_data: { calendar } as any,
       }]);
@@ -121,15 +128,13 @@ export default function ContentPlanner() {
 
   const handleDownload = () => {
     const csvContent = [
-      ["Day", "Date", "Theme", "Post Type", "Caption", "Hashtags"].join(","),
+      ["Day", "Platform", "Post Idea", "Caption"].join(","),
       ...calendar.map((day) =>
         [
           day.day,
-          day.date,
-          `"${day.theme}"`,
-          day.postType,
+          day.platform,
+          `"${day.postIdea.replace(/"/g, '""')}"`,
           `"${day.caption.replace(/"/g, '""')}"`,
-          `"${day.hashtags}"`,
         ].join(",")
       ),
     ].join("\n");
@@ -138,7 +143,7 @@ export default function ContentPlanner() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${brandName.replace(/\s+/g, "-")}-content-calendar.csv`;
+    a.download = `${niche}-${tone}-content-calendar.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
 
@@ -195,10 +200,10 @@ export default function ContentPlanner() {
             </div>
             <div>
               <h1 className="text-3xl font-display font-semibold text-foreground">
-                Social Media Content Planner
+                30-Day Content Planner
               </h1>
               <p className="text-muted-foreground">
-                Generate a 30-day content calendar for your beauty brand
+                Get a full month of Instagram & TikTok ideas tailored to your beauty niche
               </p>
             </div>
           </div>
@@ -206,61 +211,49 @@ export default function ContentPlanner() {
           {/* Input Form */}
           <Card variant="elevated" className="mb-8 animate-fade-in-up">
             <CardHeader>
-              <CardTitle>Brand Details</CardTitle>
+              <CardTitle>Your Brand</CardTitle>
               <CardDescription>
-                Tell us about your brand to create a personalized content calendar
+                Select your niche and brand tone to generate personalized content ideas
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="brandName">Brand Name *</Label>
-                  <Input
-                    id="brandName"
-                    placeholder="e.g., Glow Beauty Co"
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                  />
+                  <Label htmlFor="niche">Beauty Niche *</Label>
+                  <Select value={niche} onValueChange={setNiche}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your niche" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {niches.map((n) => (
+                        <SelectItem key={n.value} value={n.value}>
+                          {n.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Choose the main category of products you sell
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="brandNiche">Brand Niche *</Label>
-                  <Input
-                    id="brandNiche"
-                    placeholder="e.g., Organic skincare, Luxury makeup"
-                    value={brandNiche}
-                    onChange={(e) => setBrandNiche(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="targetAudience">Target Audience</Label>
-                  <Input
-                    id="targetAudience"
-                    placeholder="e.g., Women 25-40, beauty enthusiasts"
-                    value={targetAudience}
-                    onChange={(e) => setTargetAudience(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="contentGoals">Content Goals</Label>
-                  <Input
-                    id="contentGoals"
-                    placeholder="e.g., Increase engagement, promote new product launch"
-                    value={contentGoals}
-                    onChange={(e) => setContentGoals(e.target.value)}
-                  />
+                  <Label htmlFor="tone">Brand Tone *</Label>
+                  <Select value={tone} onValueChange={setTone}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your brand tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tones.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    This sets the voice and style of your captions
+                  </p>
                 </div>
               </div>
 
@@ -279,7 +272,7 @@ export default function ContentPlanner() {
                 ) : (
                   <>
                     <Calendar className="h-4 w-4" />
-                    Generate Content Calendar
+                    Generate 30-Day Content Plan
                   </>
                 )}
               </Button>
@@ -289,7 +282,7 @@ export default function ContentPlanner() {
           {/* Calendar Results */}
           {calendar.length > 0 && (
             <div className="animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <h2 className="text-2xl font-display font-semibold text-foreground">
                   Your 30-Day Content Calendar
                 </h2>
@@ -325,18 +318,20 @@ export default function ContentPlanner() {
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
                         Day {day.day}
                       </span>
-                      <span className="text-xs text-muted-foreground">{day.date}</span>
-                    </div>
-                    <div className="mb-2">
-                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-accent text-accent-foreground">
-                        {day.postType}
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        day.platform === "Instagram" 
+                          ? "bg-pink-100 text-pink-700" 
+                          : "bg-slate-100 text-slate-700"
+                      }`}>
+                        {day.platform}
                       </span>
                     </div>
-                    <h4 className="font-medium text-foreground mb-2">{day.theme}</h4>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+                    <h4 className="font-semibold text-foreground mb-2 text-sm leading-snug">
+                      {day.postIdea}
+                    </h4>
+                    <p className="text-sm text-muted-foreground line-clamp-4">
                       {day.caption}
                     </p>
-                    <p className="text-xs text-primary">{day.hashtags}</p>
                   </Card>
                 ))}
               </div>
@@ -349,7 +344,7 @@ export default function ContentPlanner() {
                 <Calendar className="h-16 w-16 mb-4 opacity-30" />
                 <p className="text-lg font-medium mb-2">No calendar generated yet</p>
                 <p className="text-sm text-center">
-                  Fill in your brand details and generate your personalized 30-day content calendar
+                  Select your beauty niche and brand tone to generate your personalized 30-day content calendar
                 </p>
               </div>
             </Card>
