@@ -28,7 +28,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/auth");
+      navigate("/auth?mode=signup");
     }
   }, [user, loading, navigate]);
 
