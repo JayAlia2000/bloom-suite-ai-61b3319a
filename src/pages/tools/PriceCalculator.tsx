@@ -15,19 +15,16 @@ export default function PriceCalculator() {
   const { toast } = useToast();
 
   const [productName, setProductName] = useState("");
-  const [productionCost, setProductionCost] = useState("");
+  const [productCost, setProductCost] = useState("");
+  const [shippingCost, setShippingCost] = useState("");
   const [packagingCost, setPackagingCost] = useState("");
-  const [laborCost, setLaborCost] = useState("");
-  const [overheadCost, setOverheadCost] = useState("");
-  const [desiredMargin, setDesiredMargin] = useState("50");
-  const [monthlyFixedCosts, setMonthlyFixedCosts] = useState("");
+  const [desiredProfit, setDesiredProfit] = useState("50");
 
   const [results, setResults] = useState<{
-    totalCost: number;
-    suggestedPrice: number;
+    suggestedRetailPrice: number;
     profitPerUnit: number;
-    breakEvenUnits: number;
-    marginPercentage: number;
+    breakEvenQuantity: number;
+    totalCost: number;
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,24 +35,23 @@ export default function PriceCalculator() {
   }, [user, loading, navigate]);
 
   const handleCalculate = () => {
-    const production = parseFloat(productionCost) || 0;
+    const product = parseFloat(productCost) || 0;
+    const shipping = parseFloat(shippingCost) || 0;
     const packaging = parseFloat(packagingCost) || 0;
-    const labor = parseFloat(laborCost) || 0;
-    const overhead = parseFloat(overheadCost) || 0;
-    const margin = parseFloat(desiredMargin) || 50;
-    const fixedCosts = parseFloat(monthlyFixedCosts) || 0;
+    const profitPercent = parseFloat(desiredProfit) || 50;
 
-    const totalCost = production + packaging + labor + overhead;
-    const suggestedPrice = totalCost / (1 - margin / 100);
-    const profitPerUnit = suggestedPrice - totalCost;
-    const breakEvenUnits = fixedCosts > 0 ? Math.ceil(fixedCosts / profitPerUnit) : 0;
+    const totalCost = product + shipping + packaging;
+    const suggestedRetailPrice = totalCost / (1 - profitPercent / 100);
+    const profitPerUnit = suggestedRetailPrice - totalCost;
+    // Break-even: assuming $500 monthly fixed costs as baseline for beauty businesses
+    const monthlyFixedCosts = 500;
+    const breakEvenQuantity = profitPerUnit > 0 ? Math.ceil(monthlyFixedCosts / profitPerUnit) : 0;
 
     setResults({
-      totalCost: Math.round(totalCost * 100) / 100,
-      suggestedPrice: Math.round(suggestedPrice * 100) / 100,
+      suggestedRetailPrice: Math.round(suggestedRetailPrice * 100) / 100,
       profitPerUnit: Math.round(profitPerUnit * 100) / 100,
-      breakEvenUnits,
-      marginPercentage: margin,
+      breakEvenQuantity,
+      totalCost: Math.round(totalCost * 100) / 100,
     });
 
     toast({
@@ -82,12 +78,10 @@ export default function PriceCalculator() {
         title: productName,
         input_data: {
           productName,
-          productionCost,
+          productCost,
+          shippingCost,
           packagingCost,
-          laborCost,
-          overheadCost,
-          desiredMargin,
-          monthlyFixedCosts,
+          desiredProfit,
         } as any,
         output_data: results as any,
       }]);
@@ -178,80 +172,65 @@ export default function PriceCalculator() {
                   <Label htmlFor="productName">Product Name</Label>
                   <Input
                     id="productName"
-                    placeholder="e.g., Radiant Glow Foundation"
+                    placeholder="e.g., Mink Lash Set"
                     value={productName}
                     onChange={(e) => setProductName(e.target.value)}
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="productionCost">Production Cost ($)</Label>
-                    <Input
-                      id="productionCost"
-                      type="number"
-                      placeholder="0.00"
-                      value={productionCost}
-                      onChange={(e) => setProductionCost(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="packagingCost">Packaging Cost ($)</Label>
-                    <Input
-                      id="packagingCost"
-                      type="number"
-                      placeholder="0.00"
-                      value={packagingCost}
-                      onChange={(e) => setPackagingCost(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="laborCost">Labor Cost ($)</Label>
-                    <Input
-                      id="laborCost"
-                      type="number"
-                      placeholder="0.00"
-                      value={laborCost}
-                      onChange={(e) => setLaborCost(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="overheadCost">Overhead Cost ($)</Label>
-                    <Input
-                      id="overheadCost"
-                      type="number"
-                      placeholder="0.00"
-                      value={overheadCost}
-                      onChange={(e) => setOverheadCost(e.target.value)}
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="desiredMargin">Desired Profit Margin (%)</Label>
+                  <Label htmlFor="productCost">Product Cost ($)</Label>
                   <Input
-                    id="desiredMargin"
-                    type="number"
-                    placeholder="50"
-                    value={desiredMargin}
-                    onChange={(e) => setDesiredMargin(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="monthlyFixedCosts">Monthly Fixed Costs ($)</Label>
-                  <Input
-                    id="monthlyFixedCosts"
+                    id="productCost"
                     type="number"
                     placeholder="0.00"
-                    value={monthlyFixedCosts}
-                    onChange={(e) => setMonthlyFixedCosts(e.target.value)}
+                    value={productCost}
+                    onChange={(e) => setProductCost(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    For break-even calculation (rent, salaries, etc.)
+                    Cost to manufacture or purchase the product
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shippingCost">Shipping Cost ($)</Label>
+                  <Input
+                    id="shippingCost"
+                    type="number"
+                    placeholder="0.00"
+                    value={shippingCost}
+                    onChange={(e) => setShippingCost(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Cost to ship product to you or your customer
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="packagingCost">Packaging Cost ($)</Label>
+                  <Input
+                    id="packagingCost"
+                    type="number"
+                    placeholder="0.00"
+                    value={packagingCost}
+                    onChange={(e) => setPackagingCost(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Boxes, tissue paper, labels, etc.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="desiredProfit">Desired Profit Percentage (%)</Label>
+                  <Input
+                    id="desiredProfit"
+                    type="number"
+                    placeholder="50"
+                    value={desiredProfit}
+                    onChange={(e) => setDesiredProfit(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    How much profit margin you want (e.g., 50 for 50%)
                   </p>
                 </div>
 
@@ -279,7 +258,7 @@ export default function PriceCalculator() {
                       <div>
                         <p className="text-sm text-muted-foreground">Suggested Retail Price</p>
                         <p className="text-3xl font-display font-bold text-foreground">
-                          ${results.suggestedPrice.toFixed(2)}
+                          ${results.suggestedRetailPrice.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -289,7 +268,7 @@ export default function PriceCalculator() {
                     <Card variant="soft" className="p-6">
                       <div className="flex items-center gap-3 mb-2">
                         <TrendingUp className="h-5 w-5 text-primary" />
-                        <p className="text-sm text-muted-foreground">Profit per Unit</p>
+                        <p className="text-sm text-muted-foreground">Profit Per Unit</p>
                       </div>
                       <p className="text-2xl font-display font-semibold text-foreground">
                         ${results.profitPerUnit.toFixed(2)}
@@ -299,11 +278,12 @@ export default function PriceCalculator() {
                     <Card variant="soft" className="p-6">
                       <div className="flex items-center gap-3 mb-2">
                         <Target className="h-5 w-5 text-primary" />
-                        <p className="text-sm text-muted-foreground">Profit Margin</p>
+                        <p className="text-sm text-muted-foreground">Break-even Quantity</p>
                       </div>
                       <p className="text-2xl font-display font-semibold text-foreground">
-                        {results.marginPercentage}%
+                        {results.breakEvenQuantity} units
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">per month</p>
                     </Card>
                   </div>
 
@@ -316,12 +296,10 @@ export default function PriceCalculator() {
                         <span className="text-muted-foreground">Total Cost per Unit</span>
                         <span className="font-medium">${results.totalCost.toFixed(2)}</span>
                       </div>
-                      {results.breakEvenUnits > 0 && (
-                        <div className="flex justify-between pt-3 border-t border-border">
-                          <span className="text-muted-foreground">Break-even Point</span>
-                          <span className="font-medium">{results.breakEvenUnits} units/month</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Your Profit Margin</span>
+                        <span className="font-medium">{desiredProfit}%</span>
+                      </div>
                     </div>
                   </Card>
 
