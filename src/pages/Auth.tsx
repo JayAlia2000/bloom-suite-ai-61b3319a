@@ -13,6 +13,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import Onboarding from "@/components/Onboarding";
 
 type AuthMode = "login" | "signup" | "forgot-password" | "verify-email";
 
@@ -28,16 +29,18 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already logged in
+  // Redirect if already logged in (skip if showing onboarding)
   useEffect(() => {
-    if (user) {
+    if (user && !showOnboarding) {
       navigate("/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, navigate, showOnboarding]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -133,7 +136,13 @@ export default function Auth() {
           title: "Email verified — welcome to Bloom Suite AI!",
           description: "Your account is now active.",
         });
-        navigate("/dashboard");
+        // Check if user has completed onboarding
+        const hasCompletedOnboarding = localStorage.getItem(`onboarding_completed_${data.user.id}`);
+        if (!hasCompletedOnboarding && isNewUser) {
+          setShowOnboarding(true);
+        } else {
+          navigate("/dashboard");
+        }
       }
     } finally {
       setLoading(false);
@@ -191,6 +200,7 @@ export default function Auth() {
             title: "Check your email!",
             description: "We've sent you a verification code.",
           });
+          setIsNewUser(true);
           setMode("verify-email");
           setResendCooldown(60);
         }
@@ -256,6 +266,18 @@ export default function Auth() {
         return "Verify Email";
     }
   };
+
+  const handleOnboardingComplete = () => {
+    if (user) {
+      localStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+    }
+    setShowOnboarding(false);
+  };
+
+  // Show onboarding for new users
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
 
   // Verify Email Screen
   if (mode === "verify-email") {
