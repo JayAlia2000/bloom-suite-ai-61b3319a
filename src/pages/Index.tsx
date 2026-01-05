@@ -84,7 +84,7 @@ export default function Index() {
             </p>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 font-body">
-              The all-in-one AI workspace for beauty entrepreneurs to create product descriptions, 
+              The all in one AI workspace for beauty entrepreneurs to create product descriptions, 
               calculate perfect pricing, and plan 30 days of content in seconds.
             </p>
 
