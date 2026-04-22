@@ -1,18 +1,9 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Flower2, Sparkles, Calculator, Calendar, ArrowRight } from "lucide-react";
 
 export default function Index() {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
-    }
-  }, [user, loading, navigate]);
 
   const tools = [
     {
@@ -56,11 +47,8 @@ export default function Index() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate("/auth")}>
-              Sign In
-            </Button>
-            <Button variant="hero" onClick={() => navigate("/auth")}>
-              Get Started
+            <Button variant="hero" onClick={() => navigate("/dashboard")}>
+              Open Dashboard
             </Button>
           </div>
         </nav>
@@ -92,10 +80,10 @@ export default function Index() {
               <Button
                 variant="hero"
                 size="xl"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/dashboard")}
                 className="group"
               >
-                Start Free Trial
+                Get Started
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
               <Button variant="glass" size="xl" onClick={() => navigate("/dashboard")}>
@@ -155,7 +143,7 @@ export default function Index() {
             <Button
               variant="glass"
               size="xl"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/dashboard")}
               className="bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
             >
               Get Started Now
