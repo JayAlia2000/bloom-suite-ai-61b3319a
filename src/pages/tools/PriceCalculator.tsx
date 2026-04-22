@@ -28,11 +28,6 @@ export default function PriceCalculator() {
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth?mode=signup");
-    }
-  }, [user, loading, navigate]);
 
   const handleCalculate = async () => {
     const product = parseFloat(productCost) || 0;

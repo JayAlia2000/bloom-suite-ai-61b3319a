@@ -28,11 +28,6 @@ export default function ProductDescription() {
   const [generatedDescription, setGeneratedDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth?mode=signup");
-    }
-  }, [user, loading, navigate]);
 
   const handleGenerate = async () => {
     if (!productName || !productType) {

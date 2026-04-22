@@ -1,25 +1,11 @@
-import { useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flower2, Sparkles, Calculator, Calendar, History, LogOut, User } from "lucide-react";
+import { Flower2, Sparkles, Calculator, Calendar, History } from "lucide-react";
 
 export default function Dashboard() {
-  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth?mode=signup");
-    }
-  }, [user, loading, navigate]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   const tools = [
     {
@@ -44,14 +30,6 @@ export default function Dashboard() {
       color: "from-orange-300 to-amber-300",
     },
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen gradient-soft flex items-center justify-center">
-        <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen gradient-soft">
@@ -84,18 +62,6 @@ export default function Dashboard() {
                   History
                 </Button>
               </Link>
-              <div className="h-8 w-px bg-border" />
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center">
-                  <User className="h-4 w-4 text-accent-foreground" />
-                </div>
-                <span className="text-sm font-medium text-foreground hidden sm:block">
-                  {user?.email}
-                </span>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
             </div>
           </nav>
         </div>

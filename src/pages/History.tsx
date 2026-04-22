@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Flower2, History, ArrowLeft, Sparkles, Calculator, Calendar, Trash2, Copy, LogOut, User } from "lucide-react";
+import { Flower2, History, ArrowLeft, Sparkles, Calculator, Calendar, Trash2, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { Json } from "@/integrations/supabase/types";
 
@@ -19,24 +18,14 @@ interface HistoryItem {
 }
 
 export default function HistoryPage() {
-  const { user, loading, signOut } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth?mode=signup");
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchHistory();
-    }
-  }, [user]);
+    fetchHistory();
+  }, []);
 
   const fetchHistory = async () => {
     try {
@@ -105,11 +94,6 @@ Break-even: ${data.breakEvenQuantity || data.breakEvenUnits} units/month`;
     });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
   const getToolIcon = (toolType: string) => {
     switch (toolType) {
       case "product_description":
@@ -149,7 +133,7 @@ Break-even: ${data.breakEvenQuantity || data.breakEvenUnits} units/month`;
     }
   };
 
-  if (loading || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen gradient-soft flex items-center justify-center">
         <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -177,20 +161,6 @@ Break-even: ${data.breakEvenQuantity || data.breakEvenUnits} units/month`;
               </span>
             </Link>
 
-            <div className="flex items-center gap-4">
-              <div className="h-8 w-px bg-border" />
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-accent flex items-center justify-center">
-                  <User className="h-4 w-4 text-accent-foreground" />
-                </div>
-                <span className="text-sm font-medium text-foreground hidden sm:block">
-                  {user?.email}
-                </span>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
           </nav>
         </div>
       </header>

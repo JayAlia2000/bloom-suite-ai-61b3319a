@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import FeedbackButton from "@/components/FeedbackButton";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import ProductDescription from "./pages/tools/ProductDescription";
@@ -25,7 +25,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
+            
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/history" element={<History />} />
             <Route path="/product-description" element={<ProductDescription />} />
