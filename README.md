@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+# 🌸 Bloom Suite AI
 
-## Project info
+**AI-powered beauty-tech SaaS platform designed to help beauty entrepreneurs build, price, and market their products.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Bloom Suite AI combines AI-assisted business tools into one workspace for beauty entrepreneurs, making it easier to turn product ideas into market-ready offers.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## About the Project
 
-**Use Lovable**
+Bloom Suite AI was created to explore how artificial intelligence, cloud-based applications, and business technology can solve real problems for entrepreneurs.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Instead of using separate tools for product descriptions, pricing decisions, and content planning, Bloom brings these functions together into one platform.
 
-Changes made via Lovable will be committed automatically to this repo.
+This project also serves as a hands-on exploration of SaaS development, AI integration, APIs, cloud technology, payment infrastructure, and user-centered product design.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Features
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### AI Product Description Generator
+Generates marketing-focused product descriptions for beauty products using AI.
 
-Follow these steps:
+### Beauty Price Calculator
+Helps entrepreneurs calculate and evaluate product pricing.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 30-Day Content Planner
+Generates structured content ideas to help beauty brands maintain a consistent marketing presence.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### SaaS User Experience
+Designed around a centralized dashboard where entrepreneurs can access multiple business tools from one platform.
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Payment Infrastructure
+Stripe integration is being implemented to support future subscription and payment functionality.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## Technology & Tools
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Lovable
+- GitHub
+- AI / LLM integration
+- Cloud-based backend services
+- Stripe API integration
+- Modern web development technologies
+- Responsive UI/UX design
+- Git version control
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Architecture
 
-## What technologies are used for this project?
+Bloom Suite AI follows a modern SaaS architecture:
 
-This project is built with:
+**User Interface → Application Logic → AI Services → Cloud Backend → Payment Services**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+GitHub is connected through two-way synchronization, allowing the project source code and development environment to remain version controlled.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## What I Learned
 
-## Can I connect a custom domain to my Lovable project?
+Building Bloom Suite AI has given me hands-on experience with:
 
-Yes, you can!
+- SaaS product development
+- AI-assisted application development
+- API integrations
+- Cloud-based application architecture
+- GitHub and version control
+- Payment infrastructure concepts
+- Product design and user experience
+- Translating business requirements into technical features
+- Troubleshooting integrations between multiple platforms
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Project Status
+
+🚧 **In Development**
+
+Bloom Suite AI is currently a portfolio and development project. Additional functionality, payment integration, testing, and production deployment are planned before public launch.
+
+---
+
+## Future Development
+
+Planned improvements include:
+
+- Complete Stripe subscription integration
+- User authentication and account management
+- Expanded AI-powered business tools
+- Persistent user data and project history
+- Improved analytics
+- Production deployment
+- Custom domain
+- Additional security and testing
+
+---
+
+## Why I Built Bloom
+
+As a graduate student studying Management Information Systems with a background in cloud computing, I wanted to build a project that connects technology with a real business use case.
+
+Bloom Suite AI allowed me to explore the intersection of **AI, cloud technology, SaaS, business analytics, and entrepreneurship** while gaining practical experience working with modern development tools.
+
+---
+
+## Author
+
+**Jocelyn Bailey**
+
+M.S. Management Information Systems  
+B.S. Cloud Computing
+
+Interested in opportunities in technology, business systems, cloud, analytics, technical support, and technology apprenticeship programs.
